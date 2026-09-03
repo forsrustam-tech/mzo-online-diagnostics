@@ -1,5 +1,5 @@
 (() => {
-  const PIXEL_ID = '1759543388108569';
+  const PIXEL_ID = '1008630185549974';
 
   // Meta Pixel base code: tracks PageView on the landing page only.
   // Lead is intentionally fired only on /thank-you.html after a successful form submit.
@@ -109,8 +109,6 @@
       const data=await res.json().catch(()=>({}));
       if(!res.ok || !data.ok) throw new Error(data.error||'request_failed');
 
-      // Mark this browser session as a confirmed lead only after Telegram/API success.
-      // thank-you.js consumes and removes this flag, so a refresh will not fire Lead again.
       sessionStorage.setItem('mzoLeadPending', '1');
       window.location.assign('/thank-you.html');
     }catch(err){
