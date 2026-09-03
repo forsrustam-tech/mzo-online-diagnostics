@@ -2,7 +2,7 @@
   const PIXEL_ID = '1008630185549974';
 
   // Meta Pixel base code: tracks PageView on the landing page only.
-  // Lead is intentionally fired only on /thank-you.html after a successful form submit.
+  // Lead is fired only on the thank-you page after a successful form submit.
   if (!window.fbq) {
     const n = window.fbq = function () {
       n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
@@ -109,8 +109,9 @@
       const data=await res.json().catch(()=>({}));
       if(!res.ok || !data.ok) throw new Error(data.error||'request_failed');
 
-      sessionStorage.setItem('mzoLeadPending', '1');
-      window.location.assign('/thank-you.html');
+      // Only a confirmed API/Telegram submission reaches the thank-you page with lead=1.
+      // The thank-you page consumes this parameter immediately after firing Meta Lead.
+      window.location.assign('/thank-you?lead=1');
     }catch(err){
       console.error(err);
       error.textContent='Не удалось отправить заявку. Попробуйте ещё раз или свяжитесь с нами напрямую.';
