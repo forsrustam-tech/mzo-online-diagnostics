@@ -1,8 +1,6 @@
 (() => {
   const PIXEL_ID = '1008630185549974';
 
-  // Meta Pixel base code: tracks PageView on the landing page only.
-  // Lead is fired only on the thank-you page after a successful form submit.
   if (!window.fbq) {
     const n = window.fbq = function () {
       n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
@@ -20,6 +18,41 @@
   }
   window.fbq('init', PIXEL_ID);
   window.fbq('track', 'PageView');
+
+  const ATTR_KEY = 'mzoAttribution';
+  const params = new URLSearchParams(window.location.search);
+  const attributionFields = [
+    'utm_source','utm_medium','utm_campaign','utm_content','utm_term',
+    'campaign_id','adset_id','ad_id','campaign_name','adset_name','ad_name','fbclid'
+  ];
+
+  function getAttribution(){
+    let saved = {};
+    try { saved = JSON.parse(sessionStorage.getItem(ATTR_KEY) || '{}'); } catch (_) {}
+
+    const current = {};
+    attributionFields.forEach(key => {
+      const value = params.get(key);
+      if (value) current[key] = value;
+    });
+
+    const hasCurrentTracking = Object.keys(current).length > 0;
+    const result = hasCurrentTracking ? {
+      ...saved,
+      ...current,
+      landing_url: window.location.href,
+      referrer: document.referrer || saved.referrer || ''
+    } : {
+      ...saved,
+      landing_url: saved.landing_url || window.location.href,
+      referrer: saved.referrer || document.referrer || ''
+    };
+
+    try { sessionStorage.setItem(ATTR_KEY, JSON.stringify(result)); } catch (_) {}
+    return result;
+  }
+
+  const attribution = getAttribution();
 
   const modal = document.getElementById('lead-modal');
   const form = document.getElementById('lead-form');
@@ -103,14 +136,13 @@
           name,
           phone:'+7'+d,
           concern,
-          source:'Сайт МЗО — онлайн-диагностика'
+          source:'Сайт МЗО — онлайн-диагностика',
+          attribution
         })
       });
       const data=await res.json().catch(()=>({}));
       if(!res.ok || !data.ok) throw new Error(data.error||'request_failed');
 
-      // Only a confirmed API/Telegram submission reaches the thank-you page with lead=1.
-      // The thank-you page consumes this parameter immediately after firing Meta Lead.
       window.location.assign('/thank-you?lead=1');
     }catch(err){
       console.error(err);
