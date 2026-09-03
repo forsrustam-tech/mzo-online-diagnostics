@@ -1,29 +1,9 @@
 (() => {
-  const PIXEL_ID = '1759543388108569';
   const INSTAGRAM_URL = 'https://www.instagram.com/mzosanki/';
-  const REDIRECT_SECONDS = 3;
-
-  if (!window.fbq) {
-    const n = window.fbq = function () {
-      n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-    };
-    if (!window._fbq) window._fbq = n;
-    n.push = n;
-    n.loaded = true;
-    n.version = '2.0';
-    n.queue = [];
-    const t = document.createElement('script');
-    t.async = true;
-    t.src = 'https://connect.facebook.net/en_US/fbevents.js';
-    const s = document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(t, s);
-  }
-
-  window.fbq('init', PIXEL_ID);
-  window.fbq('track', 'PageView');
-
+  const REDIRECT_SECONDS = 5;
   const confirmedLead = sessionStorage.getItem('mzoLeadPending') === '1';
-  if (confirmedLead) {
+
+  if (confirmedLead && typeof window.fbq === 'function') {
     window.fbq('track', 'Lead');
     sessionStorage.removeItem('mzoLeadPending');
   }
