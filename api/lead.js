@@ -2,10 +2,18 @@ function escapeHtml(value='') {
   return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+function line(label, value) {
+  if (!value) return null;
+  return `<b>${label}:</b> ${escapeHtml(value)}`;
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok:false, error:'method_not_allowed' });
   try {
-    const { website='', name='', phone='', concern='', source='Сайт МЗО — онлайн-диагностика' } = req.body || {};
+    const {
+      website='', name='', phone='', concern='', source='Сайт МЗО — онлайн-диагностика', attribution={}
+    } = req.body || {};
+
     if (website) return res.status(200).json({ ok:true });
     if (!name || !phone) return res.status(400).json({ ok:false, error:'validation_error' });
 
@@ -16,13 +24,27 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ ok:false, error:'telegram_not_configured' });
     }
 
+    const a = attribution && typeof attribution === 'object' ? attribution : {};
     const text = [
       '<b>🆕 Новая заявка с сайта МЗО</b>',
       '',
-      `<b>Имя:</b> ${escapeHtml(name)}`,
-      `<b>Телефон:</b> ${escapeHtml(phone)}`,
-      concern ? `<b>Беспокоит:</b> ${escapeHtml(concern)}` : null,
-      `<b>Источник:</b> ${escapeHtml(source)}`,
+      line('Имя', name),
+      line('Телефон', phone),
+      concern ? line('Беспокоит', concern) : null,
+      line('Источник', source),
+      '',
+      '<b>📊 Реклама / атрибуция</b>',
+      line('UTM Source', a.utm_source),
+      line('UTM Medium', a.utm_medium),
+      line('Кампания', a.utm_campaign || a.campaign_name),
+      line('Группа объявлений', a.utm_term || a.adset_name),
+      line('Креатив / объявление', a.utm_content || a.ad_name),
+      line('Campaign ID', a.campaign_id),
+      line('Ad Set ID', a.adset_id),
+      line('Ad ID', a.ad_id),
+      line('FBCLID', a.fbclid),
+      line('Посадочная', a.landing_url),
+      line('Referrer', a.referrer)
     ].filter(Boolean).join('\n');
 
     const tg = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
