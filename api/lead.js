@@ -42,9 +42,7 @@ module.exports = async function handler(req, res) {
       line('Campaign ID', a.campaign_id),
       line('Ad Set ID', a.adset_id),
       line('Ad ID', a.ad_id),
-      line('FBCLID', a.fbclid),
-      line('Посадочная', a.landing_url),
-      line('Referrer', a.referrer)
+      line('FBCLID', a.fbclid)
     ].filter(Boolean).join('\n');
 
     const tg = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
